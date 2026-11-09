@@ -1,0 +1,74 @@
+# Local stack. Usage:
+#   cp .env.example .env
+#   docker compose up -d --build
+#   node scripts/install-piston-runtimes.mjs   # once, after the judge is first up
+# The app is then served at http://localhost:${CADDY_PORT:-8080}.
+
+name: runtime-rivals
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${CADDY_PORT:-8080}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    # No host port: reached through caddy.
+
+  # `server` (REST + Socket.IO + Liveblocks auth) is added in M2. It will use:
+  #   DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  #   JUDGE_API_URL=http://judge:2000
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rr_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-runtime_rivals}
+    # Bound to localhost only, so `pnpm dev`/Prisma on the host can reach it but nothing else can.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  judge:
+    # Piston code-execution engine. It ships with no languages; see scripts/install-piston-runtimes.mjs.
+    image: ghcr.io/engineer-man/piston
+    restart: unless-stopped
+    privileged: true # required by Piston's sandbox
+    # Localhost only: used by the runtime-install script and by `pnpm dev` on the host. Never expose publicly.
+    ports:
+      - "127.0.0.1:2000:2000"
+    volumes:
+      - piston_packages:/piston/packages
+    tmpfs:
+      - /tmp:exec
+
+volumes:
+  postgres_data:
+  piston_packages:
+  caddy_data:
+  caddy_config:

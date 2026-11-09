@@ -1,0 +1,16 @@
+# Single public origin for the whole app (also what the Cloudflare tunnel points at).
+# Backend routes go to `server`, everything else to `web`.
+
+:80 {
+	encode zstd gzip
+
+	# Enable in M2, once the `server` service exists in docker-compose.yml:
+	# @server path /api/* /socket.io/* /liveblocks-auth
+	# handle @server {
+	# 	reverse_proxy server:4000
+	# }
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
