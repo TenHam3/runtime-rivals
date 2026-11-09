@@ -4,7 +4,7 @@
 
 ## Progress Checklist
 
-- [ ] M0: Repo scaffolding (pnpm/turborepo, tsconfig, lint, Vitest + `turbo test`), git init + GitHub repo + CI workflow, docker-compose with `postgres` + `judge` (C++/Python runtimes installed) + `web` + `caddy`, `.env.example`, empty `apps/web` Next.js package
+- [x] M0: Repo scaffolding (pnpm/turborepo, tsconfig, lint, Vitest + `turbo test`), git init + GitHub repo + CI workflow, docker-compose with `postgres` + `judge` (C++/Python runtimes installed) + `web` + `caddy`, `.env.example`, empty `apps/web` Next.js package
 - [ ] M1: Prisma schema for `Problem`/`TestCase` + migrations + importer (with `--dry-run`) that loads `problems/*` packages (Kattis format) + importer tests
 - [ ] M2: `apps/server` skeleton (Fastify + Socket.IO), guest-session cookie issuance
 - [ ] M3: Lobby/slot/invite flow (in-memory store) incl. side cap, lock-at-start, rejoin, host migration + lobby-rule tests
@@ -17,7 +17,9 @@
 - [ ] M9: Chat (WS events, in-memory store, scoped per lobby/slot) (+ chat area)
 - [ ] M10: Hardening + full manual smoke test (incl. via Cloudflare tunnel)
 
-**Status (2026-11-09)**: M0 scaffolding is in place and pushed to https://github.com/TenHam3/runtime-rivals — monorepo (`@rr/web`, `@rr/shared-types`, `@rr/db`, `@rr/judge-client`, `@rr/config`), lint/typecheck/test/build passing, CI workflow, compose + Caddyfile, `.env.example`, `scripts/install-piston-runtimes.mjs`. **Remaining for M0**: start Docker Desktop, `docker compose up -d --build`, run the Piston runtime script, confirm http://localhost:8080 serves the web app; confirm CI is green on GitHub. Then tick M0 and start M1.
+**Status (2026-11-09)**: M0 is complete. Repo: https://github.com/TenHam3/runtime-rivals — monorepo (`@rr/web`, `@rr/shared-types`, `@rr/db`, `@rr/judge-client`, `@rr/config`), lint/typecheck/test/build passing locally and in CI, compose stack (caddy, web, postgres, judge) running, http://localhost:8080 serves the web app through Caddy, Piston has gcc 10.2.0 (C++) and Python 3.12.0 installed and verified by executing sample programs. **Next: M1** — start by writing the failing importer tests + fixture problem folders.
+
+Placeholder tests (`packages/*/src/index.test.ts` + the `PACKAGE_NAME` exports) only prove the tooling works; delete each one when its package gets its first real test.
 
 Dev-environment notes:
 - Repo intentionally stays in OneDrive (user decision). If installs/builds hit `EBUSY`/`EPERM` file locks, pause OneDrive sync or move the repo to e.g. `C:\dev\runtime-rivals`.
@@ -25,7 +27,9 @@ Dev-environment notes:
 - pnpm 12 refuses packages published in the last 24h (`minimumReleaseAge`). If an install adds a `minimumReleaseAgeExclude` block to `pnpm-workspace.yaml`, pin a slightly older version instead of keeping the exclusion.
 - ESLint is pinned to 9.x because `eslint-config-next`'s plugins (react, jsx-a11y, import) don't support ESLint 10 yet. TypeScript is pinned to 5.9 (typescript-eslint doesn't support TS 7).
 - Workspace packages export TypeScript source (`"exports": "./src/index.ts"`) — no per-package build step; Next compiles them via `transpilePackages`.
-- Docker Desktop must be running (WSL2 backend) for compose.
+- Docker Desktop must be running (WSL2 backend, cgroup v2) for compose.
+- A native Windows Postgres install already listens on host port 5432, so the compose `postgres` service is published on **5433** (`POSTGRES_PORT`, `DATABASE_URL` in `.env`). Inside the compose network it's still `postgres:5432`.
+- Piston: gcc 10.2.0 supports C++17 fully and C++20 only partially — keep that in mind for the language registry (M4). Piston's execute response already includes `status`, `memory`, `cpu_time`, `wall_time`; Piston appends the language extension to the file name (`main.cpp` → `main.cpp.cpp`), so the adapter should pass a bare name like `main`.
 
 ---
 
