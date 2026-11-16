@@ -9,6 +9,8 @@ dist/
 coverage/
 *.tsbuildinfo
 next-env.d.ts
+# Prisma client, regenerated on install (packages/db postinstall)
+packages/db/src/generated/
 
 # env — commit .env.example only
 .env

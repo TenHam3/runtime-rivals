@@ -1,0 +1,44 @@
+// Phase 1 persists only the problem bank (see PLAN.MD "Phase 1 data model").
+// Rows are written by the problem-package importer, never by the app at runtime.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Connection URL lives in prisma.config.ts (Prisma 7).
+datasource db {
+  provider = "postgresql"
+}
+
+model Problem {
+  id                String     @id @default(cuid())
+  /// Package folder name under problems/; the importer upserts by this.
+  slug              String     @unique
+  title             String
+  statementMarkdown String
+  difficulty        Int
+  timeLimitMs       Int
+  memoryLimitMb     Int
+  /// From the default output validator's float tolerance flag; null = exact token comparison.
+  floatTolerance    Float?
+  createdAt         DateTime   @default(now())
+  testCases         TestCase[]
+
+  @@index([difficulty])
+}
+
+model TestCase {
+  id             String  @id @default(cuid())
+  problemId      String
+  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input          String
+  expectedOutput String
+  isSample       Boolean
+  /// Position within the whole problem (samples first), unique per problem.
+  orderIndex     Int
+  /// Share of the test group's max_score; stored but unused for ranking in Phase 1.
+  points         Int     @default(0)
+
+  @@unique([problemId, orderIndex])
+}

@@ -4,5 +4,7 @@ packages:
 
 # pnpm only runs dependency install scripts that are listed here.
 allowBuilds:
+  "@prisma/engines": true
+  prisma: true
   sharp: false
   unrs-resolver: false

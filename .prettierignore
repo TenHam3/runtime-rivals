@@ -3,6 +3,8 @@ node_modules
 .turbo
 dist
 coverage
+packages/db/src/generated
+packages/db/prisma/migrations
 pnpm-lock.yaml
 problems
 PLAN.MD
