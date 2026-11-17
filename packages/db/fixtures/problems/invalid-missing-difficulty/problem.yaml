@@ -1,0 +1,6 @@
+problem_format_version: 2025-09
+name: Broken
+uuid: 00000000-0000-4000-8000-000000000000
+keywords: ["math"]
+limits:
+  time_limit: 1

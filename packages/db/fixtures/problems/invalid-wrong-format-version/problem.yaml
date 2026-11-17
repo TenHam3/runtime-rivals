@@ -1,0 +1,6 @@
+problem_format_version: 2023-07-draft
+name: Broken
+uuid: 00000000-0000-4000-8000-000000000000
+keywords: ["difficulty:1"]
+limits:
+  time_limit: 1

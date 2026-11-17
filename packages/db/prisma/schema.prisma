@@ -37,8 +37,6 @@ model TestCase {
   isSample       Boolean
   /// Position within the whole problem (samples first), unique per problem.
   orderIndex     Int
-  /// Share of the test group's max_score; stored but unused for ranking in Phase 1.
-  points         Int     @default(0)
 
   @@unique([problemId, orderIndex])
 }

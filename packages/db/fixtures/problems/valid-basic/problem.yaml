@@ -1,0 +1,7 @@
+problem_format_version: 2025-09
+name: A Plus B
+uuid: 3f1c2a9e-6b1d-4c3e-9a51-0d2b7e4f8a10
+keywords: ["difficulty:1"]
+limits:
+  time_limit: 1.5
+  memory: 512

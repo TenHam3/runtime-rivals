@@ -5,6 +5,7 @@ dist
 coverage
 packages/db/src/generated
 packages/db/prisma/migrations
+packages/db/fixtures
 pnpm-lock.yaml
 problems
 PLAN.MD
