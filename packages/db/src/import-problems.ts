@@ -54,7 +54,12 @@ export class ProblemPackageError extends Error {
 
 const isNotFound = (err: unknown) => err instanceof Error && "code" in err && err.code === "ENOENT";
 
-async function readCaseFiles(slug: string, dir: string, isSample: boolean, orderIndex: number): Promise<ProblemPackageTestCase[]> {
+async function readCaseFiles(
+  slug: string,
+  dir: string,
+  isSample: boolean,
+  orderIndex: number,
+): Promise<ProblemPackageTestCase[]> {
   try {
     const label = isSample ? "data/sample" : "data/secret";
     const entries = await readdir(dir, { withFileTypes: true });
@@ -75,11 +80,11 @@ async function readCaseFiles(slug: string, dir: string, isSample: boolean, order
 
     for (const name of names) {
       const base = name.slice(0, -4);
-      if (name.endsWith(".ans") && !names.has(`${base}.in`)) throw new ProblemPackageError(`${slug}: ${label}/${name} has no ${base}.in`);
+      if (name.endsWith(".ans") && !names.has(`${base}.in`))
+        throw new ProblemPackageError(`${slug}: ${label}/${name} has no ${base}.in`);
     }
     return testCases;
-  }
-  catch (err) {
+  } catch (err) {
     if (isSample && isNotFound(err)) return [];
     throw err;
   }
@@ -90,23 +95,28 @@ async function readFloatTolerance(slug: string, floatTolerancePath: string): Pro
   try {
     const text = await readFile(floatTolerancePath, "utf8");
     raw = parse(text);
-  }
-  catch (err) {
+  } catch (err) {
     if (isNotFound(err)) return null;
     throw new ProblemPackageError(`${slug}: can't read test_group.yaml: ${(err as Error).message}`);
   }
 
   const testGroupYaml = TestGroupYaml.safeParse(raw);
-  if (!testGroupYaml.success) throw new ProblemPackageError(`${slug}: test_group.yaml does not conform to the expected schema: ${z.prettifyError(testGroupYaml.error)}`);
+  if (!testGroupYaml.success)
+    throw new ProblemPackageError(
+      `${slug}: test_group.yaml does not conform to the expected schema: ${z.prettifyError(testGroupYaml.error)}`,
+    );
 
   const args = testGroupYaml.data.output_validator_args ?? [];
   if (args.includes("float_absolute_tolerance") || args.includes("float_relative_tolerance")) {
-    throw new ProblemPackageError(`${slug}: test_group.yaml: output_validator_args must use "float_tolerance" instead of "float_absolute_tolerance" or "float_relative_tolerance"`);
+    throw new ProblemPackageError(
+      `${slug}: test_group.yaml: output_validator_args must use "float_tolerance" instead of "float_absolute_tolerance" or "float_relative_tolerance"`,
+    );
   }
   const i = args.indexOf("float_tolerance");
   if (i === -1) return null;
   const tolerance = Number(args[i + 1]);
-  if (!Number.isFinite(tolerance) || tolerance <= 0) throw new ProblemPackageError(`${slug}: float_tolerance must be a positive number, got ${args[i + 1]}`);
+  if (!Number.isFinite(tolerance) || tolerance <= 0)
+    throw new ProblemPackageError(`${slug}: float_tolerance must be a positive number, got ${args[i + 1]}`);
   return tolerance;
 }
 
@@ -127,21 +137,21 @@ export async function loadProblemPackage(dir: string): Promise<ProblemPackage> {
     const text = await readFile(yamlPath, "utf8");
     const raw = parse(text);
     problemYaml = ProblemYaml.safeParse(raw);
-  }
-  catch (err) {
+  } catch (err) {
     throw new ProblemPackageError(`${slug}: can't read problem.yaml: ${(err as Error).message}`);
   }
 
   if (!problemYaml.success) {
-    throw new ProblemPackageError(`${slug}: problem.yaml does not conform to the expected schema: ${z.prettifyError(problemYaml.error)}`);
+    throw new ProblemPackageError(
+      `${slug}: problem.yaml does not conform to the expected schema: ${z.prettifyError(problemYaml.error)}`,
+    );
   }
   const name = problemYaml.data.name;
 
   let problemStatement: string;
   try {
     problemStatement = await readFile(statementPath, "utf8");
-  }
-  catch (err) {
+  } catch (err) {
     throw new ProblemPackageError(`${slug}: can't read problem statement: ${(err as Error).message}`);
   }
 
@@ -149,11 +159,11 @@ export async function loadProblemPackage(dir: string): Promise<ProblemPackage> {
   try {
     const sampleCases = await readCaseFiles(slug, samplesDir, true, 0);
     const secretCases = await readCaseFiles(slug, secretDir, false, sampleCases.length);
-    if (secretCases.length === 0) throw new ProblemPackageError(`${slug}: no secret test cases found, need at least one`);
+    if (secretCases.length === 0)
+      throw new ProblemPackageError(`${slug}: no secret test cases found, need at least one`);
 
     testCases = [...sampleCases, ...secretCases];
-  }
-  catch (err) {
+  } catch (err) {
     if (err instanceof ProblemPackageError) throw err;
     throw new ProblemPackageError(`${slug}: can't read test case directories: ${(err as Error).message}`);
   }
@@ -168,7 +178,7 @@ export async function loadProblemPackage(dir: string): Promise<ProblemPackage> {
     timeLimitMs: Math.round(problemYaml.data.limits.time_limit * 1000),
     memoryLimitMb: problemYaml.data.limits.memory ?? 256,
     floatTolerance,
-    testCases
+    testCases,
   };
   return problemPackage;
 }
