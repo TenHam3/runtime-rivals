@@ -19,8 +19,8 @@ Test-only problem packages for the importer tests (M1). `valid-*` must import; e
 - `slug` = package folder name.
 - `statement/problem.en.md` required → `statementMarkdown` (verbatim).
 - `data/sample/` optional, `data/secret/` required with at least one test case.
-- A test case is `<name>.in` + `<name>.ans`; an `.in` without `.ans` is an error. Contents are stored verbatim.
-- Test data groups (any subfolder of `data/secret/`) are not supported and are an error.
+- A test case is `<name>.in` + `<name>.ans`; an `.in` without `.ans` and vice versa are errors. Contents are stored verbatim.
+- Test data groups (any subfolder of `data/sample/` or `data/secret/`) are not supported and are an error.
 
 **Ordering**
 

@@ -17,18 +17,16 @@
 - [ ] M9: Chat (WS events, in-memory store, scoped per lobby/slot) (+ chat area)
 - [ ] M10: Hardening + full manual smoke test (incl. via Cloudflare tunnel)
 
-**Status (2026-11-16)**: M0 is complete (repo: https://github.com/TenHam3/runtime-rivals; compose stack, CI, Piston with gcc 10.2.0 + Python 3.12.0 all verified). **M1 is in progress** — steps 1–4 done, see below.
-
-**Unpushed on purpose:** local `main` is ahead of `origin` with M1 commits whose importer tests are intentionally red (test-first). Don't push until step 5 makes `pnpm --filter @rr/db test` pass, or CI on `main` goes red.
+**Status (2026-11-23)**: M0 is complete (repo: https://github.com/TenHam3/runtime-rivals; compose stack, CI, Piston with gcc 10.2.0 + Python 3.12.0 all verified). **M1 is in progress** — steps 1–5 done; importer tests green. Local `main` is ahead of `origin` with the M1 commits; safe to push now that tests pass.
 
 ### M1 steps
 
 1. [x] **[User]** Pin the Kattis spec version → `2025-09` (see Locked decisions).
 2. [x] **[Claude]** Prisma 7 in `packages/db`: `schema.prisma`, `prisma.config.ts` (loads root `.env`), migrations, `createPrismaClient`, client generated on `pnpm install`, root `db:*` scripts.
-3. [x] **[Claude]** Fixture packages in `packages/db/fixtures/problems/` (2 valid, 14 invalid) + `README.md` there with the importer rules. Scoring groups dropped from Phase 1.
+3. [x] **[Claude]** Fixture packages in `packages/db/fixtures/problems/` (2 valid, 16 invalid) + `README.md` there with the importer rules. Scoring groups dropped from Phase 1.
 4. [x] **[Claude]** Failing tests `packages/db/src/import-problems.test.ts` + stub `loadProblemPackage` / `ProblemPackageError` in `packages/db/src/import-problems.ts`.
-5. [ ] **[User] ← next** Implement `loadProblemPackage(dir)` until `pnpm --filter @rr/db test` passes (Zod + `yaml` are already installed).
-6. [ ] **[Claude]** (can run in parallel with 5) Importer CLI: `pnpm db:import` upserts every `problems/*` package (upsert `Problem` by slug, delete + re-insert its `TestCase`s in one transaction); `--dry-run` validates only, no DB. Uncomment the dry-run step in `.github/workflows/ci.yml`.
+5. [x] **[User]** Implement `loadProblemPackage(dir)` until `pnpm --filter @rr/db test` passes. Also added two rules (`.ans` without `.in` is an error; subfolders in `data/sample/` are an error) with fixtures `invalid-missing-in` and `invalid-sample-subfolder`. Decisions: `problem_format_version` required, `type` optional (per spec); difficulty stays a `difficulty:N` keyword; `z.uuid()` and `strictObject` are stricter than the spec, fine for our own problems.
+6. [ ] **[Claude] ← next** Importer CLI: `pnpm db:import` upserts every `problems/*` package (upsert `Problem` by slug, delete + re-insert its `TestCase`s in one transaction); `--dry-run` validates only, no DB. Uncomment the dry-run step in `.github/workflows/ci.yml`.
 7. [ ] **[User]** Author 2+ real problems in `problems/<slug>/`.
 8. [ ] **[Both]** Verify: lint/typecheck/test/build green locally + CI; import into Docker Postgres, check rows in `pnpm db:studio`, re-run → no duplicates, break a `problem.yaml` → `--dry-run` fails. Push, then tick M1 above.
 
